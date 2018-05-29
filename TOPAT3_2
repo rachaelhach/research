@@ -1,0 +1,273 @@
+classdef TOPAT3 < matlab.apps.AppBase
+
+    % Properties that correspond to app components
+    properties (Access = public)
+        UIFigure                       matlab.ui.Figure
+        TabGroup                       matlab.ui.container.TabGroup
+        FilterTab                      matlab.ui.container.Tab
+        LoadDataButton                 matlab.ui.control.Button
+        UIAxes                         matlab.ui.control.UIAxes
+        FilterTypeButtonGroup          matlab.ui.container.ButtonGroup
+        SpatialMedianButton            matlab.ui.control.ToggleButton
+        GaussianButton                 matlab.ui.control.ToggleButton
+        LowPassButton                  matlab.ui.control.ToggleButton
+        UIAxes2                        matlab.ui.control.UIAxes
+        KernelSizeSigmaEditFieldLabel  matlab.ui.control.Label
+        KernelSizeSigmaEditField       matlab.ui.control.NumericEditField
+        SaveFilteredImageButton        matlab.ui.control.Button
+        MaskTab                        matlab.ui.container.Tab
+        LoadDataButton_2               matlab.ui.control.Button
+        MaskTypeButtonGroup            matlab.ui.container.ButtonGroup
+        EllipseButton                  matlab.ui.control.RadioButton
+        RectangleButton                matlab.ui.control.RadioButton
+        FreeHandButton                 matlab.ui.control.RadioButton
+        DrawButton                     matlab.ui.control.Button
+        UIAxes3                        matlab.ui.control.UIAxes
+        RegisterTab                    matlab.ui.container.Tab
+    end
+
+
+    properties (Access = public)
+        imdata % loaded data for the filtering tab
+        imdata2 % loaded data for the masking tab
+        selectedFilter %filter selected for filtering tab
+        selectedMask %mask selected for masking tab
+        kernelsize %the numeric field that reflects the size of the kernel
+    end
+
+
+    methods (Access = private)
+
+        % Code that executes after component creation
+        function startupFcn(app)
+            app.selectedFilter = 'Spatial Median'; %sets any initial parameters (defaults)
+            app.selectedMask = 'Ellipse';
+        end
+
+        % Button pushed function: LoadDataButton
+        function LoadDataButtonPushed(app, event)
+            [fileName2, path2] = uigetfile('C:\engg111-finalproject\*.png;*.jpeg;*.mat');
+            app.imdata = rgb2gray(imread(fileName2));
+            imshow(app.imdata, 'Parent', app.UIAxes);
+        end
+
+        % Selection changed function: FilterTypeButtonGroup
+        function FilterTypeButtonGroupSelectionChanged(app, event)
+            app.selectedFilter = app.FilterTypeButtonGroup.SelectedObject.Text;
+            if strcmpi(app.selectedFilter, 'Spatial Median')
+                imdata_filtered = medfilt2(app.imdata, [app.kernelsize app.kernelsize]);
+                imshow(imdata_filtered, 'Parent', app.UIAxes2);
+            elseif strcmpi(app.selectedFilter, 'Gaussian')
+                imdata_filtered = imgaussfilt(app.imdata, app.kernelsize);
+                imshow(imdata_filtered, 'Parent', app.UIAxes2);
+            elseif strcmpi(app.selectedFilter, 'Low Pass')
+                r = 2;
+                
+            end
+            
+        end
+
+        % Value changed function: KernelSizeSigmaEditField
+        function KernelSizeSigmaEditFieldValueChanged(app, event)
+            app.kernelsize = app.KernelSizeSigmaEditField.Value;
+            
+        end
+
+        % Button pushed function: SaveFilteredImageButton
+        function SaveFilteredImageButtonPushed(app, event)
+            uiputfile('C:\engg111-finalproject\*.png;*.jpeg;*.mat');
+            %imwrite(normckovstack, fname, 'png', 'Bitdepth', 16, 'Mode', 'lossless')
+        end
+
+        % Button pushed function: LoadDataButton_2
+        function LoadDataButton_2Pushed(app, event)
+            [fileName, path] = uigetfile('C:\engg111-finalproject\*.png;*.jpeg;*.mat');
+            app.imdata2 = imread(fileName);
+            imshow(app.imdata2, 'Parent', app.UIAxes3);
+        end
+
+        % Selection changed function: MaskTypeButtonGroup
+        function MaskTypeButtonGroupSelectionChanged(app, event)
+            app.selectedMask = app.MaskTypeButtonGroup.SelectedObject;
+            
+        end
+
+        % Button pushed function: DrawButton
+        function DrawButtonPushed(app, event)
+            imshow(app.imdata2)
+            if strcmpi(app.selectedMask, 'Ellipse')
+                hax = gca;
+                h= imellipse(hax);
+                mask = createMask(h);
+                structBoundaries = bwboundaries(mask);
+                xy=structBoundaries{1};
+                x = xy(:, 2); % Columns.
+                y = xy(:, 1); % Rows.
+                hold on;
+                plot(x, y, 'r', 'LineWidth', 1);
+                close
+                ax = app.UIAxes3;
+                hold(ax,'on')
+                plot(ax,x,y)
+                
+            elseif app.draw_option == 'Rectangle'
+                hax = gca;
+                h = imrect(hax);
+                mask = createMask(h);
+                close
+            elseif strcomp(app.draw_option, 'Free Hand')
+                hax = gca;
+                h = imfreehand(hax);
+                mask = createMask(h);
+                close
+            end
+        end
+    end
+
+    % App initialization and construction
+    methods (Access = private)
+
+        % Create UIFigure and components
+        function createComponents(app)
+
+            % Create UIFigure
+            app.UIFigure = uifigure;
+            app.UIFigure.Position = [100 100 852 587];
+            app.UIFigure.Name = 'UI Figure';
+
+            % Create TabGroup
+            app.TabGroup = uitabgroup(app.UIFigure);
+            app.TabGroup.Position = [1 1 852 587];
+
+            % Create FilterTab
+            app.FilterTab = uitab(app.TabGroup);
+            app.FilterTab.Title = 'Filter';
+
+            % Create LoadDataButton
+            app.LoadDataButton = uibutton(app.FilterTab, 'push');
+            app.LoadDataButton.ButtonPushedFcn = createCallbackFcn(app, @LoadDataButtonPushed, true);
+            app.LoadDataButton.Position = [34 496 100 22];
+            app.LoadDataButton.Text = 'Load Data';
+
+            % Create UIAxes
+            app.UIAxes = uiaxes(app.FilterTab);
+            app.UIAxes.Position = [34 154 371 256];
+
+            % Create FilterTypeButtonGroup
+            app.FilterTypeButtonGroup = uibuttongroup(app.FilterTab);
+            app.FilterTypeButtonGroup.SelectionChangedFcn = createCallbackFcn(app, @FilterTypeButtonGroupSelectionChanged, true);
+            app.FilterTypeButtonGroup.Title = 'Filter Type';
+            app.FilterTypeButtonGroup.Position = [187 427 123 106];
+
+            % Create SpatialMedianButton
+            app.SpatialMedianButton = uitogglebutton(app.FilterTypeButtonGroup);
+            app.SpatialMedianButton.Text = 'Spatial Median';
+            app.SpatialMedianButton.Position = [11 53 100 22];
+            app.SpatialMedianButton.Value = true;
+
+            % Create GaussianButton
+            app.GaussianButton = uitogglebutton(app.FilterTypeButtonGroup);
+            app.GaussianButton.Text = 'Gaussian';
+            app.GaussianButton.Position = [11 32 100 22];
+
+            % Create LowPassButton
+            app.LowPassButton = uitogglebutton(app.FilterTypeButtonGroup);
+            app.LowPassButton.Text = 'Low Pass';
+            app.LowPassButton.Position = [11 11 100 22];
+
+            % Create UIAxes2
+            app.UIAxes2 = uiaxes(app.FilterTab);
+            app.UIAxes2.Position = [424 154 390 256];
+
+            % Create KernelSizeSigmaEditFieldLabel
+            app.KernelSizeSigmaEditFieldLabel = uilabel(app.FilterTab);
+            app.KernelSizeSigmaEditFieldLabel.HorizontalAlignment = 'right';
+            app.KernelSizeSigmaEditFieldLabel.Position = [576 472 112 15];
+            app.KernelSizeSigmaEditFieldLabel.Text = 'Kernel Size / Sigma';
+
+            % Create KernelSizeSigmaEditField
+            app.KernelSizeSigmaEditField = uieditfield(app.FilterTab, 'numeric');
+            app.KernelSizeSigmaEditField.ValueChangedFcn = createCallbackFcn(app, @KernelSizeSigmaEditFieldValueChanged, true);
+            app.KernelSizeSigmaEditField.Position = [703 468 100 22];
+
+            % Create SaveFilteredImageButton
+            app.SaveFilteredImageButton = uibutton(app.FilterTab, 'push');
+            app.SaveFilteredImageButton.ButtonPushedFcn = createCallbackFcn(app, @SaveFilteredImageButtonPushed, true);
+            app.SaveFilteredImageButton.Position = [687 50 124 22];
+            app.SaveFilteredImageButton.Text = 'Save Filtered Image';
+
+            % Create MaskTab
+            app.MaskTab = uitab(app.TabGroup);
+            app.MaskTab.Title = 'Mask';
+
+            % Create LoadDataButton_2
+            app.LoadDataButton_2 = uibutton(app.MaskTab, 'push');
+            app.LoadDataButton_2.ButtonPushedFcn = createCallbackFcn(app, @LoadDataButton_2Pushed, true);
+            app.LoadDataButton_2.Position = [75 474 100 22];
+            app.LoadDataButton_2.Text = 'Load Data';
+
+            % Create MaskTypeButtonGroup
+            app.MaskTypeButtonGroup = uibuttongroup(app.MaskTab);
+            app.MaskTypeButtonGroup.SelectionChangedFcn = createCallbackFcn(app, @MaskTypeButtonGroupSelectionChanged, true);
+            app.MaskTypeButtonGroup.Title = 'Mask Type';
+            app.MaskTypeButtonGroup.Position = [63 329 123 106];
+
+            % Create EllipseButton
+            app.EllipseButton = uiradiobutton(app.MaskTypeButtonGroup);
+            app.EllipseButton.Text = 'Ellipse';
+            app.EllipseButton.Position = [11 60 59 15];
+            app.EllipseButton.Value = true;
+
+            % Create RectangleButton
+            app.RectangleButton = uiradiobutton(app.MaskTypeButtonGroup);
+            app.RectangleButton.Text = 'Rectangle';
+            app.RectangleButton.Position = [11 38 78 15];
+
+            % Create FreeHandButton
+            app.FreeHandButton = uiradiobutton(app.MaskTypeButtonGroup);
+            app.FreeHandButton.Text = 'Free Hand';
+            app.FreeHandButton.Position = [11 16 80 15];
+
+            % Create DrawButton
+            app.DrawButton = uibutton(app.MaskTab, 'push');
+            app.DrawButton.ButtonPushedFcn = createCallbackFcn(app, @DrawButtonPushed, true);
+            app.DrawButton.Position = [74 260 100 22];
+            app.DrawButton.Text = 'Draw';
+
+            % Create UIAxes3
+            app.UIAxes3 = uiaxes(app.MaskTab);
+            app.UIAxes3.Position = [276 74 500 401];
+
+            % Create RegisterTab
+            app.RegisterTab = uitab(app.TabGroup);
+            app.RegisterTab.Title = 'Register';
+        end
+    end
+
+    methods (Access = public)
+
+        % Construct app
+        function app = TOPAT3
+
+            % Create and configure components
+            createComponents(app)
+
+            % Register the app with App Designer
+            registerApp(app, app.UIFigure)
+
+            % Execute the startup function
+            runStartupFcn(app, @startupFcn)
+
+            if nargout == 0
+                clear app
+            end
+        end
+
+        % Code that executes before app deletion
+        function delete(app)
+
+            % Delete UIFigure when app is deleted
+            delete(app.UIFigure)
+        end
+    end
+end

@@ -1,0 +1,1082 @@
+classdef TOPAT3 < matlab.apps.AppBase
+
+    % Properties that correspond to app components
+    properties (Access = public)
+        UIFigure                        matlab.ui.Figure
+        TabGroup                        matlab.ui.container.TabGroup
+        FilterTab                       matlab.ui.container.Tab
+        LoadDataButton                  matlab.ui.control.Button
+        UIAxes                          matlab.ui.control.UIAxes
+        FilterTypeButtonGroup           matlab.ui.container.ButtonGroup
+        SpatialMedianButton             matlab.ui.control.ToggleButton
+        GaussianButton                  matlab.ui.control.ToggleButton
+        LowPassButton                   matlab.ui.control.ToggleButton
+        UIAxes2                         matlab.ui.control.UIAxes
+        KernelSizeSigmaEditFieldLabel   matlab.ui.control.Label
+        KernelSizeSigmaEditField        matlab.ui.control.NumericEditField
+        SaveFilteredImageButton         matlab.ui.control.Button
+        MaskTab                         matlab.ui.container.Tab
+        LoadDataButton_2                matlab.ui.control.Button
+        MaskTypeButtonGroup             matlab.ui.container.ButtonGroup
+        EllipseButton                   matlab.ui.control.RadioButton
+        RectangleButton                 matlab.ui.control.RadioButton
+        FreeHandButton                  matlab.ui.control.RadioButton
+        DrawButton                      matlab.ui.control.Button
+        UIAxes3                         matlab.ui.control.UIAxes
+        SaveMaskedDataButton            matlab.ui.control.Button
+        RegisterTab                     matlab.ui.container.Tab
+        RegistrationType                matlab.ui.container.TabGroup
+        MutualInformationTab            matlab.ui.container.Tab
+        LoadFixedImageButton            matlab.ui.control.Button
+        LoadMovingImageButton           matlab.ui.control.Button
+        FixedImageLoaded                matlab.ui.control.Label
+        MovingImageLoaded               matlab.ui.control.Label
+        UIAxes4                         matlab.ui.control.UIAxes
+        UIAxes4_2                       matlab.ui.control.UIAxes
+        RotationAngleLabel              matlab.ui.control.Label
+        TranslationXRangeLabel          matlab.ui.control.Label
+        TranslationYRangeLabel          matlab.ui.control.Label
+        ScaleLabel                      matlab.ui.control.Label
+        MinEditFieldLabel               matlab.ui.control.Label
+        AngleMinEditField               matlab.ui.control.NumericEditField
+        MaxEditFieldLabel               matlab.ui.control.Label
+        AngleMaxEditField               matlab.ui.control.NumericEditField
+        MinEditFieldLabel_2             matlab.ui.control.Label
+        XMinEditField                   matlab.ui.control.NumericEditField
+        MaxEditFieldLabel_2             matlab.ui.control.Label
+        XMaxEditField                   matlab.ui.control.NumericEditField
+        MinEditFieldLabel_3             matlab.ui.control.Label
+        YMinEditField                   matlab.ui.control.NumericEditField
+        MaxEditFieldLabel_3             matlab.ui.control.Label
+        YMaxEditField                   matlab.ui.control.NumericEditField
+        MinEditFieldLabel_4             matlab.ui.control.Label
+        ScaleMinEditField               matlab.ui.control.NumericEditField
+        MaxEditFieldLabel_4             matlab.ui.control.Label
+        ScaleMaxEditField               matlab.ui.control.NumericEditField
+        UIAxes5                         matlab.ui.control.UIAxes
+        RegisterButton                  matlab.ui.control.Button
+        InitialOverlapLabel             matlab.ui.control.Label
+        JointHistogramLabel             matlab.ui.control.Label
+        MutualInformationLabel          matlab.ui.control.Label
+        StopButton                      matlab.ui.control.Button
+        SaveRegisteredImageButton_2     matlab.ui.control.Button
+        CriticalPointSelectTab          matlab.ui.container.Tab
+        LaunchCPSelectGUIButton         matlab.ui.control.Button
+        TransformationTypeButtonGroup   matlab.ui.container.ButtonGroup
+        Affine2DButton                  matlab.ui.control.RadioButton
+        ProjectiveButton                matlab.ui.control.RadioButton
+        NonReflectiveSimilarityButton   matlab.ui.control.RadioButton
+        ReflectiveSimilarityButton      matlab.ui.control.RadioButton
+        InterpolationTypeButtonGroup    matlab.ui.container.ButtonGroup
+        LinearButton                    matlab.ui.control.RadioButton
+        CubicButton                     matlab.ui.control.RadioButton
+        NearestNeighborButton           matlab.ui.control.RadioButton
+        UIAxes4_3                       matlab.ui.control.UIAxes
+        InitialOverlapLabel_2           matlab.ui.control.Label
+        UIAxes4_4                       matlab.ui.control.UIAxes
+        RegistrationLabel               matlab.ui.control.Label
+        SaveRegisteredImageButton       matlab.ui.control.Button
+        LoadFixedImageButton_2          matlab.ui.control.Button
+        LoadMovingImageButton_2         matlab.ui.control.Button
+        FixedImageLoaded_2              matlab.ui.control.Label
+        MovingImageLoaded_2             matlab.ui.control.Label
+        RegisterButton_2                matlab.ui.control.Button
+        MutualInformationComputedLabel  matlab.ui.control.Label
+        DrawROITab                      matlab.ui.container.Tab
+        CallRegisteredDataSet1Button    matlab.ui.control.Button
+        NoDataSetCalledLabel            matlab.ui.control.Label
+        DrawROIButton                   matlab.ui.control.Button
+        TestMontageButton               matlab.ui.control.Button
+        ROITypeDropDownLabel            matlab.ui.control.Label
+        ROITypeDropDown                 matlab.ui.control.DropDown
+        CompareRegisteredDataSetsLabel  matlab.ui.control.Label
+        UIAxes6                         matlab.ui.control.UIAxes
+        CompareLikeDatasetsLabel        matlab.ui.control.Label
+        NumberofSamplesEditFieldLabel   matlab.ui.control.Label
+        NumberofSamplesEditField        matlab.ui.control.NumericEditField
+        DrawROIButton_2                 matlab.ui.control.Button
+        CallRegisteredDataSet2Button    matlab.ui.control.Button
+        NoDataSetCalledLabel_2          matlab.ui.control.Label
+        UIAxes7                         matlab.ui.control.UIAxes
+        DataSet1Label                   matlab.ui.control.Label
+        DataSet2Label                   matlab.ui.control.Label
+        ROI1AverageLabel                matlab.ui.control.Label
+        ROI2AverageLabel                matlab.ui.control.Label
+    end
+
+
+    properties (Access = public)
+        imdata % loaded data for the filtering tab
+        imdata2 % loaded data for the masking tab
+        selectedFilter %filter selected for filtering tab
+        selectedMask %mask selected for masking tab
+        kernelsize %the numeric field that reflects the size of the kernel
+        imdatafixed %fixed image for registration
+        imdatafixed2
+        imdatamoving %moving image for registration
+        imdatamoving2
+        anglemin
+        anglemax
+        xmin
+        xmax
+        ymin
+        ymax
+        scalemin
+        scalemax
+        stopfunc
+        MovingPoints
+        FixedPoints
+        Registered
+        imdatacalled1
+        imdatacalled2
+    end
+
+
+    methods (Access = private)
+
+        % Code that executes after component creation
+        function startupFcn(app)
+            app.selectedFilter = 'Spatial Median'; %sets any initial parameters (defaults)
+            app.selectedMask = 'Ellipse';
+            app.ScaleMaxEditField.Value = 30;
+            app.ScaleMinEditField.Value = 1;
+            app.XMinEditField.Value = -10;
+            app.XMaxEditField.Value = 20;
+            app.YMinEditField.Value = -27;
+            app.YMaxEditField.Value = -25;
+            app.AngleMinEditField.Value = -3;
+            app.AngleMaxEditField.Value = 3;
+            app.TransformationTypeButtonGroup.SelectedObject.Text = 'Affine 2D';
+            app.InterpolationTypeButtonGroup.SelectedObject.Text = 'Linear';
+        end
+
+        % Button pushed function: LoadDataButton
+        function LoadDataButtonPushed(app, event)
+            [fileName2, path2] = uigetfile('C:\engg111-finalproject\*.png;*.jpeg;*.mat');
+            app.imdata = rgb2gray(imread(fileName2));
+            imshow(app.imdata, 'Parent', app.UIAxes);
+        end
+
+        % Selection changed function: FilterTypeButtonGroup
+        function FilterTypeButtonGroupSelectionChanged(app, event)
+            app.selectedFilter = app.FilterTypeButtonGroup.SelectedObject.Text;
+            if strcmpi(app.selectedFilter, 'Spatial Median')
+                imdata_filtered = medfilt2(app.imdata, [app.kernelsize app.kernelsize]);
+                imshow(imdata_filtered, 'Parent', app.UIAxes2);
+            elseif strcmpi(app.selectedFilter, 'Gaussian')
+                imdata_filtered = imgaussfilt(app.imdata, app.kernelsize);
+                imshow(imdata_filtered, 'Parent', app.UIAxes2);
+            elseif strcmpi(app.selectedFilter, 'Low Pass')
+                r = 2;
+                
+            end
+            
+        end
+
+        % Value changed function: KernelSizeSigmaEditField
+        function KernelSizeSigmaEditFieldValueChanged(app, event)
+            app.kernelsize = app.KernelSizeSigmaEditField.Value;
+            
+        end
+
+        % Button pushed function: SaveFilteredImageButton
+        function SaveFilteredImageButtonPushed(app, event)
+            uiputfile('C:\engg111-finalproject\*.png;*.jpeg;*.mat');
+            %imwrite(normckovstack, fname, 'png', 'Bitdepth', 16, 'Mode', 'lossless')
+        end
+
+        % Button pushed function: LoadDataButton_2
+        function LoadDataButton_2Pushed(app, event)
+            [fileName, path] = uigetfile('C:\engg111-finalproject\*.png;*.jpeg;*.mat');
+            app.imdata2 = imread(fileName);
+            imshow(app.imdata2, 'Parent', app.UIAxes3);
+        end
+
+        % Selection changed function: MaskTypeButtonGroup
+        function MaskTypeButtonGroupSelectionChanged(app, event)
+            app.selectedMask = app.MaskTypeButtonGroup.SelectedObject;
+            
+        end
+
+        % Button pushed function: DrawButton
+        function DrawButtonPushed(app, event)
+            imshow(app.imdata2)
+            if strcmpi(app.selectedMask, 'Ellipse')
+                hax = gca;
+                h= imellipse(hax);
+                mask = createMask(h);
+                close
+                imdata_masked = double(app.imdata2).*mask;
+                imshow(imdata_masked./max(imdata_masked(:)), 'Parent', app.UIAxes3)
+                
+%                 structBoundaries = bwboundaries(mask);
+%                 xy=structBoundaries{1};
+%                 x = xy(:, 2); % Columns.
+%                 y = xy(:, 1); % Rows.
+%                 hold on;
+%                 plot(x, y, 'r', 'LineWidth', 1);
+%                 close
+%                 ax = app.UIAxes3;
+%                 hold(ax,'on')
+%                 plot(ax,x,y)
+                
+            elseif app.draw_option == 'Rectangle'
+                hax = gca;
+                h = imrect(hax);
+                mask = createMask(h);
+                close
+                imdata_masked = double(app.imdata2).*mask;
+                imshow(imdata_masked./max(imdata_masked(:)), 'Parent', app.UIAxes3)
+                
+            elseif strcomp(app.draw_option, 'Free Hand')
+                hax = gca;
+                h = imfreehand(hax);
+                mask = createMask(h);
+                close
+                imdata_masked = double(app.imdata2).*mask;
+                imshow(imdata_masked./max(imdata_masked(:)), 'Parent', app.UIAxes3)
+                
+            end
+        end
+
+        % Button pushed function: SaveMaskedDataButton
+        function SaveMaskedDataButtonPushed(app, event)
+            uiputfile('C:\engg111-finalproject\*.png;*.jpeg;*.mat');
+        end
+
+        % Button pushed function: LoadFixedImageButton
+        function LoadFixedImageButtonPushed(app, event)
+            [fileName, path2] = uigetfile('C:\engg111-finalproject\*.png;*.jpeg;*.mat');
+            app.imdatafixed = rgb2gray(imread(fileName));
+            app.FixedImageLoaded.Text = fileName;
+        end
+
+        % Button pushed function: LoadMovingImageButton
+        function LoadMovingImageButtonPushed(app, event)
+            [fileName, path2] = uigetfile('C:\engg111-finalproject\*.png;*.jpeg;*.mat');
+            app.imdatamoving = rgb2gray(imread(fileName));
+            app.imdatamoving = padarray(app.imdatamoving,[150 150],'both');
+            app.imdatamoving = uint8(round(imresize(app.imdatamoving, [size(app.imdatafixed,1) size(app.imdatafixed,2)])));
+            app.MovingImageLoaded.Text = fileName; %updates the label to the filename.
+            
+            
+            if isempty(app.imdatamoving) == 0 && isempty(app.imdatafixed) == 0
+                imIn1 = app.imdatafixed;
+                dim1 = size(imIn1,1); dim2 = size(imIn1,2);
+                imIn2 = imresize(app.imdatamoving, [dim1 dim2]);
+                imOut=uint8(zeros(size(imIn1,1),size(imIn1,2),3));
+                imOut(:,:,1)=uint8(imIn1);
+                imOut(:,:,2)=uint8(round(imIn2));
+                imOut(:,:,3)=bitxor(imIn1,imIn2);
+                imshow(imOut, 'Parent', app.UIAxes4);
+            end
+            
+        end
+
+        % Button pushed function: RegisterButton
+        function RegisterButtonPushed(app, event)
+            %this part of the code adapted from Dr. Hartov's Mutual Information sample code. I've modified it to include scale adjustments. 
+            index=1;
+            h1=[];
+            valMax=0;
+            breakflag = 0; 
+            for p = app.ScaleMinEditField.Value:10:app.ScaleMaxEditField.Value
+                for r=app.YMinEditField.Value:1:app.YMaxEditField.Value
+                    for c=app.XMinEditField.Value:1:app.XMaxEditField.Value
+                        for a= app.AngleMinEditField.Value:1:app.AngleMaxEditField.Value
+                            imRef=app.imdatafixed;
+                            imTest=imrotate(app.imdatamoving,a,'nearest','crop');
+                            imTest_res = padarray(imTest, [p p], 'both');
+                            imTest_res = imresize(imTest_res, [size(imRef,1), size(imRef,2)]);
+                            imTest=circshift(imTest_res,[r c]);
+                            imOut(:,:,1)=imRef;
+                            imOut(:,:,2)=imTest;
+                            imOut(:,:,3)=bitxor(imRef,imTest);
+                            imshow(imOut, 'Parent', app.UIAxes5);
+                            
+                            thresh = 40;
+                            
+                            bw1=im2bw(imRef,thresh/255);    % Threshold Reference image
+                            bw2=im2bw(imTest, thresh/255);   % Threshold Test image
+                            bw=bitor(bw1,bw2);
+                            [rr cc]=find(bw==1);        % Find the indices for non-0 pixels
+                            rmin=min(rr);
+                            rmax=max(rr);
+                            cmin=min(cc);
+                            cmax=max(cc);
+                            imTest(rmax:end,:)=[];      % Remove from the bottom
+                            imTest(1:rmin,:)=[];        % Remove from the top
+                            imTest(:,cmax:end)=[];      % Remove from the right
+                            imTest(:,1:cmin)=[];        % Remove from the left
+                            
+                            % Repeat same cropping on the reference image
+                            imRef(rmax:end,:)=[];       % Remove from the bottom
+                            imRef(1:rmin,:)=[];         % Remove from the top
+                            imRef(:,cmax:end)=[];       % Remove from the right
+                            imRef(:,1:cmin)=[];         % Remove from the left
+                            
+                            %                             rectangle('Position',[cmin,rmin,cmax-cmin,rmax-rmin],...
+                            %                                 'EdgeColor','r')
+                            drawnow;
+                            
+                            [val h]=MI2(imRef,imTest);
+                            if isempty(h1)
+                                h1=h;
+                            end
+                            MI(index,:)=[r c a val];
+                            app.MutualInformationLabel.Text = ['MI=' num2str(val) ', r=' num2str(r) ', c=' num2str(c) ', a=' num2str(a)  ', p=' num2str(p)];
+                            
+                            if val>valMax
+                                valMax=val;
+                                imshow(imOut, 'Parent', app.UIAxes4);
+                                app.InitialOverlapLabel.Text = ['Best MI=' num2str(val) ', r=' num2str(r) ', c=' num2str(c) ', a=' num2str(a) ', p=' num2str(p)];
+                                
+                                idx=find(h>0.00001);
+                                hh=h;
+                                hh(idx)=1;
+                                imshow(imrotate(hh,90),[], 'Parent', app.UIAxes4_2);
+                                h2=h;
+                                drawnow;
+                            end
+                            
+                            drawnow;
+                            if app.stopfunc == 1
+                                breakflag = 1;
+                                break
+                            end
+                            
+                        end
+                        if breakflag == 1
+                            break
+                        end
+                    end
+                    if breakflag == 1
+                        break
+                    end
+                end
+                if breakflag == 1
+                    break %lots of damn loops we need to break out of. 
+                end
+            end
+        end
+
+        % Button pushed function: StopButton
+        function StopButtonPushed(app, event)
+            app.stopfunc = 1; %want to initialize a variable to equal a binary value 1 when the button is pressed so that we can call it from the inside function. 
+        end
+
+        % Button pushed function: SaveRegisteredImageButton_2
+        function SaveRegisteredImageButton_2Pushed(app, event)
+            uiputfile('C:\engg111-finalproject\*.png;*.jpeg;*.mat');
+        end
+
+        % Button pushed function: LoadFixedImageButton_2
+        function LoadFixedImageButton_2Pushed(app, event)
+            [fileName, ~] = uigetfile('C:\engg111-finalproject\*.png;*.jpeg;*.mat');
+            app.imdatafixed2 = rgb2gray(imread(fileName));
+            app.FixedImageLoaded_2.Text = fileName;
+            
+            if exist(app.imdatamoving2, 'var') == 1 && exist(app.imdatafixed2, 'var') == 1
+                imshowpair(app.imdatafixed2, app.imdatamoving2, 'Parent', app.UIAxes4_3)
+            end %including it in the fixed image button as well so that it doesnt matter which order you load in the fixed and moving images.
+        end
+
+        % Button pushed function: LoadMovingImageButton_2
+        function LoadMovingImageButton_2Pushed(app, event)
+            [fileName, ~] = uigetfile('C:\engg111-finalproject\*.png;*.jpeg;*.mat');
+            app.imdatamoving2 = rgb2gray(imread(fileName));
+            app.MovingImageLoaded_2.Text = fileName;
+            
+            if isempty(app.imdatamoving2) == 0 && isempty(app.imdatafixed2) == 0
+                imshowpair(app.imdatafixed2, app.imdatamoving2, 'Parent', app.UIAxes4_3)
+            end
+        end
+
+        % Button pushed function: LaunchCPSelectGUIButton
+        function LaunchCPSelectGUIButtonPushed(app, event)
+            fixedim = app.imdatafixed2;
+            movingim = app.imdatamoving2;
+            [app.MovingPoints, app.FixedPoints] = cpselect(movingim, fixedim,'Wait',true);
+        end
+
+        % Button pushed function: RegisterButton_2
+        function RegisterButton_2Pushed(app, event)
+            if app.TransformationTypeButtonGroup.SelectedObject.Text == 'Affine 2D'
+                type = 'affine';
+            elseif app.TransformationTypeButtonGroup.SelectedObject.Text == 'Projective'
+                type = 'projective';
+            elseif app.TransformationTypeButtonGroup.SelectedObject.Text == 'Reflective'
+                type = 'similarity';
+            elseif app.TransformationTypeButtonGroup.SelectedObject.Text == 'Non-Reflective Similarity'
+                type = 'nonreflectivesimilarity';
+            end
+            
+            tform = fitgeotrans(app.MovingPoints,app.FixedPoints, type);
+            app.Registered = imwarp(app.imdatamoving2,tform,'OutputView',imref2d(size(app.imdatafixed2)));
+            imshowpair(app.imdatafixed2, app.Registered, 'Parent', app.UIAxes4_4)
+            [h a]=MI2(app.imdatafixed2,app.Registered); 
+            app.MutualInformationComputedLabel.Text = ['Mutual Information Computed:'  num2str(h)];
+        end
+
+        % Button pushed function: SaveRegisteredImageButton
+        function SaveRegisteredImageButtonPushed(app, event)
+             %[file,path] = uiputfile('C:\engg111-finalproject\*.png;*.jpeg;*.mat');
+             [filename, pathname] = uiputfile('output.dat');
+             path_file=fullfile(pathname,filename)
+             a=fopen(path_file,'wt');
+             fprintf(a,'write something');
+             fclose('all')
+        end
+
+        % Button pushed function: CallRegisteredDataSet1Button
+        function CallRegisteredDataSet1ButtonPushed(app, event)
+            [fileName, ~] = uigetfile('C:\engg111-finalproject\*.png;*.jpeg;*.mat');
+            app.NoDataSetCalledLabel.Text = fileName;
+            [filepath,name,ext] = fileparts(fileName)
+            if ext == '.png'
+                app.imdatacalled1 = rgb2gray(imread(fileName));
+                imshow(app.imdatacalled1, 'Parent', app.UIAxes6)
+            elseif ext == '.jpg'
+                app.imdatacalled1 = rgb2gray(imread(fileName));
+                imshow(app.imdatacalled1, 'Parent', app.UIAxes6)
+            elseif ext == '.mat'
+                app.imdatacalled1 = cell2mat(struct2cell(load(fileName)));
+                imshow(app.imdatacalled1, 'Parent', app.UIAxes6)
+            end
+        end
+
+        % Button pushed function: CallRegisteredDataSet2Button
+        function CallRegisteredDataSet2ButtonPushed(app, event)
+            [fileName, ~] = uigetfile('C:\engg111-finalproject\*.png;*.jpeg;*.mat');
+            app.NoDataSetCalledLabel_2.Text = fileName;
+            [filepath,name,ext] = fileparts(fileName)
+            if ext == '.png'
+                app.imdatacalled2 = rgb2gray(imread(fileName));
+            elseif ext == '.jpg'
+                app.imdatacalled2 = rgb2gray(imread(fileName));
+            elseif ext == '.mat'
+                app.imdatacalled2 = cell2mat(struct2cell(load(fileName)));
+            end
+        end
+
+        % Button pushed function: DrawROIButton
+        function DrawROIButtonPushed(app, event)
+            imshow(app.imdatacalled1)
+            if strcmpi(app.ROITypeDropDown.Value, 'Ellipse')
+                hax = gca;
+                h= imellipse(hax);
+                mask = createMask(h);
+                close
+                %imdata_roi = double(app.imdatacalled1).*mask;
+                maskedImage = app.imdatacalled1;
+                maskedImage2 = app.imdatacalled2;
+                maskedImage(~mask) = 0; maskedImage2(~mask) = 0;
+                avgROI1 = mean(maskedImage(mask));
+                avgROI2 = mean(maskedImage2(mask));
+                imshow(app.imdatacalled1, 'Parent', app.UIAxes6)
+                imshow(app.imdatacalled2, 'Parent', app.UIAxes7)
+                app.ROI1AverageLabel.Text = ['ROI 1 Avg: ' num2str(avgROI1)];
+                app.ROI2AverageLabel.Text = ['ROI 2 Avg: ' num2str(avgROI2)];
+                
+                structBoundaries = bwboundaries(mask);
+                xy=structBoundaries{1};
+                x = xy(:, 2); % Columns.
+                y = xy(:, 1); % Rows.
+                hold on;
+                plot(x, y, 'r', 'LineWidth', 1);
+                close
+                ax = app.UIAxes6;
+                ax2 = app.UIAxes7;
+                hold(ax,'on')
+                hold(ax2,'on')
+                plot(ax,x,y, 'r', 'LineWidth', 2)
+                plot(ax2,x,y, 'r', 'LineWidth', 2)
+                
+            elseif strcmpi(app.ROITypeDropDown.Value, 'Rectangle')
+                hax = gca;
+                h = imrect(hax);
+                mask = createMask(h);
+                close
+                imdata_roi = double(app.imdatacalled1).*mask;
+                imshow(app.imdatacalled1, 'Parent', app.UIAxes6)
+                
+                structBoundaries = bwboundaries(mask);
+                xy=structBoundaries{1};
+                x = xy(:, 2); % Columns.
+                y = xy(:, 1); % Rows.
+                hold on;
+                plot(x, y, 'r', 'LineWidth', 1);
+                close
+                ax = app.UIAxes6;
+                hold(ax,'on')
+                plot(ax,x,y)
+                
+            elseif strcmpi(app.ROITypeDropDown.Value, 'Free Hand')
+                hax = gca;
+                h = imfreehand(hax);
+                mask = createMask(h);
+                close
+                imdata_masked = double(app.imdata2).*mask;
+                imshow(imdata_masked./max(imdata_masked(:)), 'Parent', app.UIAxes3)
+                
+            end
+        end
+    end
+
+    % App initialization and construction
+    methods (Access = private)
+
+        % Create UIFigure and components
+        function createComponents(app)
+
+            % Create UIFigure
+            app.UIFigure = uifigure;
+            app.UIFigure.Position = [100 100 852 587];
+            app.UIFigure.Name = 'UI Figure';
+
+            % Create TabGroup
+            app.TabGroup = uitabgroup(app.UIFigure);
+            app.TabGroup.Position = [1 1 852 587];
+
+            % Create FilterTab
+            app.FilterTab = uitab(app.TabGroup);
+            app.FilterTab.Title = 'Filter';
+
+            % Create LoadDataButton
+            app.LoadDataButton = uibutton(app.FilterTab, 'push');
+            app.LoadDataButton.ButtonPushedFcn = createCallbackFcn(app, @LoadDataButtonPushed, true);
+            app.LoadDataButton.Position = [34 496 100 22];
+            app.LoadDataButton.Text = 'Load Data';
+
+            % Create UIAxes
+            app.UIAxes = uiaxes(app.FilterTab);
+            app.UIAxes.Position = [34 154 371 256];
+
+            % Create FilterTypeButtonGroup
+            app.FilterTypeButtonGroup = uibuttongroup(app.FilterTab);
+            app.FilterTypeButtonGroup.SelectionChangedFcn = createCallbackFcn(app, @FilterTypeButtonGroupSelectionChanged, true);
+            app.FilterTypeButtonGroup.Title = 'Filter Type';
+            app.FilterTypeButtonGroup.Position = [187 427 123 106];
+
+            % Create SpatialMedianButton
+            app.SpatialMedianButton = uitogglebutton(app.FilterTypeButtonGroup);
+            app.SpatialMedianButton.Text = 'Spatial Median';
+            app.SpatialMedianButton.Position = [11 53 100 22];
+            app.SpatialMedianButton.Value = true;
+
+            % Create GaussianButton
+            app.GaussianButton = uitogglebutton(app.FilterTypeButtonGroup);
+            app.GaussianButton.Text = 'Gaussian';
+            app.GaussianButton.Position = [11 32 100 22];
+
+            % Create LowPassButton
+            app.LowPassButton = uitogglebutton(app.FilterTypeButtonGroup);
+            app.LowPassButton.Text = 'Low Pass';
+            app.LowPassButton.Position = [11 11 100 22];
+
+            % Create UIAxes2
+            app.UIAxes2 = uiaxes(app.FilterTab);
+            app.UIAxes2.Position = [424 154 390 256];
+
+            % Create KernelSizeSigmaEditFieldLabel
+            app.KernelSizeSigmaEditFieldLabel = uilabel(app.FilterTab);
+            app.KernelSizeSigmaEditFieldLabel.HorizontalAlignment = 'right';
+            app.KernelSizeSigmaEditFieldLabel.Position = [576 472 112 15];
+            app.KernelSizeSigmaEditFieldLabel.Text = 'Kernel Size / Sigma';
+
+            % Create KernelSizeSigmaEditField
+            app.KernelSizeSigmaEditField = uieditfield(app.FilterTab, 'numeric');
+            app.KernelSizeSigmaEditField.ValueChangedFcn = createCallbackFcn(app, @KernelSizeSigmaEditFieldValueChanged, true);
+            app.KernelSizeSigmaEditField.Position = [703 468 100 22];
+
+            % Create SaveFilteredImageButton
+            app.SaveFilteredImageButton = uibutton(app.FilterTab, 'push');
+            app.SaveFilteredImageButton.ButtonPushedFcn = createCallbackFcn(app, @SaveFilteredImageButtonPushed, true);
+            app.SaveFilteredImageButton.Position = [687 50 124 22];
+            app.SaveFilteredImageButton.Text = 'Save Filtered Image';
+
+            % Create MaskTab
+            app.MaskTab = uitab(app.TabGroup);
+            app.MaskTab.Title = 'Mask';
+
+            % Create LoadDataButton_2
+            app.LoadDataButton_2 = uibutton(app.MaskTab, 'push');
+            app.LoadDataButton_2.ButtonPushedFcn = createCallbackFcn(app, @LoadDataButton_2Pushed, true);
+            app.LoadDataButton_2.Position = [75 474 100 22];
+            app.LoadDataButton_2.Text = 'Load Data';
+
+            % Create MaskTypeButtonGroup
+            app.MaskTypeButtonGroup = uibuttongroup(app.MaskTab);
+            app.MaskTypeButtonGroup.SelectionChangedFcn = createCallbackFcn(app, @MaskTypeButtonGroupSelectionChanged, true);
+            app.MaskTypeButtonGroup.Title = 'Mask Type';
+            app.MaskTypeButtonGroup.Position = [63 329 123 106];
+
+            % Create EllipseButton
+            app.EllipseButton = uiradiobutton(app.MaskTypeButtonGroup);
+            app.EllipseButton.Text = 'Ellipse';
+            app.EllipseButton.Position = [11 60 59 15];
+            app.EllipseButton.Value = true;
+
+            % Create RectangleButton
+            app.RectangleButton = uiradiobutton(app.MaskTypeButtonGroup);
+            app.RectangleButton.Text = 'Rectangle';
+            app.RectangleButton.Position = [11 38 78 15];
+
+            % Create FreeHandButton
+            app.FreeHandButton = uiradiobutton(app.MaskTypeButtonGroup);
+            app.FreeHandButton.Text = 'Free Hand';
+            app.FreeHandButton.Position = [11 16 80 15];
+
+            % Create DrawButton
+            app.DrawButton = uibutton(app.MaskTab, 'push');
+            app.DrawButton.ButtonPushedFcn = createCallbackFcn(app, @DrawButtonPushed, true);
+            app.DrawButton.Position = [74 260 100 22];
+            app.DrawButton.Text = 'Draw';
+
+            % Create UIAxes3
+            app.UIAxes3 = uiaxes(app.MaskTab);
+            app.UIAxes3.Position = [276 74 500 401];
+
+            % Create SaveMaskedDataButton
+            app.SaveMaskedDataButton = uibutton(app.MaskTab, 'push');
+            app.SaveMaskedDataButton.ButtonPushedFcn = createCallbackFcn(app, @SaveMaskedDataButtonPushed, true);
+            app.SaveMaskedDataButton.Position = [65 32 118 22];
+            app.SaveMaskedDataButton.Text = 'Save Masked Data';
+
+            % Create RegisterTab
+            app.RegisterTab = uitab(app.TabGroup);
+            app.RegisterTab.Title = 'Register';
+
+            % Create RegistrationType
+            app.RegistrationType = uitabgroup(app.RegisterTab);
+            app.RegistrationType.Position = [1 1 850 536];
+
+            % Create MutualInformationTab
+            app.MutualInformationTab = uitab(app.RegistrationType);
+            app.MutualInformationTab.Title = 'Mutual Information';
+
+            % Create LoadFixedImageButton
+            app.LoadFixedImageButton = uibutton(app.MutualInformationTab, 'push');
+            app.LoadFixedImageButton.ButtonPushedFcn = createCallbackFcn(app, @LoadFixedImageButtonPushed, true);
+            app.LoadFixedImageButton.Position = [26 450 113 22];
+            app.LoadFixedImageButton.Text = 'Load Fixed Image';
+
+            % Create LoadMovingImageButton
+            app.LoadMovingImageButton = uibutton(app.MutualInformationTab, 'push');
+            app.LoadMovingImageButton.ButtonPushedFcn = createCallbackFcn(app, @LoadMovingImageButtonPushed, true);
+            app.LoadMovingImageButton.Position = [26 399 123 22];
+            app.LoadMovingImageButton.Text = 'Load Moving Image';
+
+            % Create FixedImageLoaded
+            app.FixedImageLoaded = uilabel(app.MutualInformationTab);
+            app.FixedImageLoaded.Position = [158 454 111 15];
+            app.FixedImageLoaded.Text = '(No Image Loaded)';
+
+            % Create MovingImageLoaded
+            app.MovingImageLoaded = uilabel(app.MutualInformationTab);
+            app.MovingImageLoaded.Position = [159 399 111 15];
+            app.MovingImageLoaded.Text = '(No Image Loaded)';
+
+            % Create UIAxes4
+            app.UIAxes4 = uiaxes(app.MutualInformationTab);
+            app.UIAxes4.Position = [328 341 218 139];
+
+            % Create UIAxes4_2
+            app.UIAxes4_2 = uiaxes(app.MutualInformationTab);
+            app.UIAxes4_2.Position = [603 341 218 139];
+
+            % Create RotationAngleLabel
+            app.RotationAngleLabel = uilabel(app.MutualInformationTab);
+            app.RotationAngleLabel.FontWeight = 'bold';
+            app.RotationAngleLabel.Position = [52 324 97 15];
+            app.RotationAngleLabel.Text = 'Rotation (Angle)';
+
+            % Create TranslationXRangeLabel
+            app.TranslationXRangeLabel = uilabel(app.MutualInformationTab);
+            app.TranslationXRangeLabel.FontWeight = 'bold';
+            app.TranslationXRangeLabel.Position = [52 255 128 15];
+            app.TranslationXRangeLabel.Text = 'Translation (X Range)';
+
+            % Create TranslationYRangeLabel
+            app.TranslationYRangeLabel = uilabel(app.MutualInformationTab);
+            app.TranslationYRangeLabel.FontWeight = 'bold';
+            app.TranslationYRangeLabel.Position = [52 188 128 15];
+            app.TranslationYRangeLabel.Text = 'Translation (Y Range)';
+
+            % Create ScaleLabel
+            app.ScaleLabel = uilabel(app.MutualInformationTab);
+            app.ScaleLabel.FontWeight = 'bold';
+            app.ScaleLabel.Position = [52 129 37 15];
+            app.ScaleLabel.Text = 'Scale';
+
+            % Create MinEditFieldLabel
+            app.MinEditFieldLabel = uilabel(app.MutualInformationTab);
+            app.MinEditFieldLabel.HorizontalAlignment = 'right';
+            app.MinEditFieldLabel.Position = [57 299 28 15];
+            app.MinEditFieldLabel.Text = 'Min.';
+
+            % Create AngleMinEditField
+            app.AngleMinEditField = uieditfield(app.MutualInformationTab, 'numeric');
+            app.AngleMinEditField.Position = [89 295 45 22];
+
+            % Create MaxEditFieldLabel
+            app.MaxEditFieldLabel = uilabel(app.MutualInformationTab);
+            app.MaxEditFieldLabel.HorizontalAlignment = 'right';
+            app.MaxEditFieldLabel.Position = [154 299 31 15];
+            app.MaxEditFieldLabel.Text = 'Max.';
+
+            % Create AngleMaxEditField
+            app.AngleMaxEditField = uieditfield(app.MutualInformationTab, 'numeric');
+            app.AngleMaxEditField.Position = [189 295 45 22];
+
+            % Create MinEditFieldLabel_2
+            app.MinEditFieldLabel_2 = uilabel(app.MutualInformationTab);
+            app.MinEditFieldLabel_2.HorizontalAlignment = 'right';
+            app.MinEditFieldLabel_2.Position = [57 230 28 15];
+            app.MinEditFieldLabel_2.Text = 'Min.';
+
+            % Create XMinEditField
+            app.XMinEditField = uieditfield(app.MutualInformationTab, 'numeric');
+            app.XMinEditField.Position = [89 226 45 22];
+
+            % Create MaxEditFieldLabel_2
+            app.MaxEditFieldLabel_2 = uilabel(app.MutualInformationTab);
+            app.MaxEditFieldLabel_2.HorizontalAlignment = 'right';
+            app.MaxEditFieldLabel_2.Position = [154 230 31 15];
+            app.MaxEditFieldLabel_2.Text = 'Max.';
+
+            % Create XMaxEditField
+            app.XMaxEditField = uieditfield(app.MutualInformationTab, 'numeric');
+            app.XMaxEditField.Position = [189 226 45 22];
+
+            % Create MinEditFieldLabel_3
+            app.MinEditFieldLabel_3 = uilabel(app.MutualInformationTab);
+            app.MinEditFieldLabel_3.HorizontalAlignment = 'right';
+            app.MinEditFieldLabel_3.Position = [57 163 28 15];
+            app.MinEditFieldLabel_3.Text = 'Min.';
+
+            % Create YMinEditField
+            app.YMinEditField = uieditfield(app.MutualInformationTab, 'numeric');
+            app.YMinEditField.Position = [89 159 45 22];
+
+            % Create MaxEditFieldLabel_3
+            app.MaxEditFieldLabel_3 = uilabel(app.MutualInformationTab);
+            app.MaxEditFieldLabel_3.HorizontalAlignment = 'right';
+            app.MaxEditFieldLabel_3.Position = [154 163 31 15];
+            app.MaxEditFieldLabel_3.Text = 'Max.';
+
+            % Create YMaxEditField
+            app.YMaxEditField = uieditfield(app.MutualInformationTab, 'numeric');
+            app.YMaxEditField.Position = [189 159 45 22];
+
+            % Create MinEditFieldLabel_4
+            app.MinEditFieldLabel_4 = uilabel(app.MutualInformationTab);
+            app.MinEditFieldLabel_4.HorizontalAlignment = 'right';
+            app.MinEditFieldLabel_4.Position = [57 104 28 15];
+            app.MinEditFieldLabel_4.Text = 'Min.';
+
+            % Create ScaleMinEditField
+            app.ScaleMinEditField = uieditfield(app.MutualInformationTab, 'numeric');
+            app.ScaleMinEditField.Position = [89 100 45 22];
+
+            % Create MaxEditFieldLabel_4
+            app.MaxEditFieldLabel_4 = uilabel(app.MutualInformationTab);
+            app.MaxEditFieldLabel_4.HorizontalAlignment = 'right';
+            app.MaxEditFieldLabel_4.Position = [154 104 31 15];
+            app.MaxEditFieldLabel_4.Text = 'Max.';
+
+            % Create ScaleMaxEditField
+            app.ScaleMaxEditField = uieditfield(app.MutualInformationTab, 'numeric');
+            app.ScaleMaxEditField.Position = [189 100 45 22];
+
+            % Create UIAxes5
+            app.UIAxes5 = uiaxes(app.MutualInformationTab);
+            app.UIAxes5.Position = [345 61 448 220];
+
+            % Create RegisterButton
+            app.RegisterButton = uibutton(app.MutualInformationTab, 'push');
+            app.RegisterButton.ButtonPushedFcn = createCallbackFcn(app, @RegisterButtonPushed, true);
+            app.RegisterButton.Position = [55 40 100 22];
+            app.RegisterButton.Text = 'Register';
+
+            % Create InitialOverlapLabel
+            app.InitialOverlapLabel = uilabel(app.MutualInformationTab);
+            app.InitialOverlapLabel.FontWeight = 'bold';
+            app.InitialOverlapLabel.Position = [328 487 266 15];
+            app.InitialOverlapLabel.Text = 'Initial Overlap';
+
+            % Create JointHistogramLabel
+            app.JointHistogramLabel = uilabel(app.MutualInformationTab);
+            app.JointHistogramLabel.FontWeight = 'bold';
+            app.JointHistogramLabel.Position = [603 487 96 15];
+            app.JointHistogramLabel.Text = 'Joint Histogram';
+
+            % Create MutualInformationLabel
+            app.MutualInformationLabel = uilabel(app.MutualInformationTab);
+            app.MutualInformationLabel.FontWeight = 'bold';
+            app.MutualInformationLabel.Position = [328 302 371 15];
+            app.MutualInformationLabel.Text = 'Mutual Information = ';
+
+            % Create StopButton
+            app.StopButton = uibutton(app.MutualInformationTab, 'push');
+            app.StopButton.ButtonPushedFcn = createCallbackFcn(app, @StopButtonPushed, true);
+            app.StopButton.Position = [170 40 100 22];
+            app.StopButton.Text = 'Stop';
+
+            % Create SaveRegisteredImageButton_2
+            app.SaveRegisteredImageButton_2 = uibutton(app.MutualInformationTab, 'push');
+            app.SaveRegisteredImageButton_2.ButtonPushedFcn = createCallbackFcn(app, @SaveRegisteredImageButton_2Pushed, true);
+            app.SaveRegisteredImageButton_2.Position = [678 19 143 22];
+            app.SaveRegisteredImageButton_2.Text = 'Save Registered Image';
+
+            % Create CriticalPointSelectTab
+            app.CriticalPointSelectTab = uitab(app.RegistrationType);
+            app.CriticalPointSelectTab.Title = 'Critical Point Select';
+
+            % Create LaunchCPSelectGUIButton
+            app.LaunchCPSelectGUIButton = uibutton(app.CriticalPointSelectTab, 'push');
+            app.LaunchCPSelectGUIButton.ButtonPushedFcn = createCallbackFcn(app, @LaunchCPSelectGUIButtonPushed, true);
+            app.LaunchCPSelectGUIButton.Position = [538 440 137 22];
+            app.LaunchCPSelectGUIButton.Text = 'Launch CP Select GUI';
+
+            % Create TransformationTypeButtonGroup
+            app.TransformationTypeButtonGroup = uibuttongroup(app.CriticalPointSelectTab);
+            app.TransformationTypeButtonGroup.Title = 'Transformation Type';
+            app.TransformationTypeButtonGroup.Position = [20 233 182 124];
+
+            % Create Affine2DButton
+            app.Affine2DButton = uiradiobutton(app.TransformationTypeButtonGroup);
+            app.Affine2DButton.Text = 'Affine 2D';
+            app.Affine2DButton.Position = [11 78 72 15];
+            app.Affine2DButton.Value = true;
+
+            % Create ProjectiveButton
+            app.ProjectiveButton = uiradiobutton(app.TransformationTypeButtonGroup);
+            app.ProjectiveButton.Text = 'Projective';
+            app.ProjectiveButton.Position = [11 56 76 15];
+
+            % Create NonReflectiveSimilarityButton
+            app.NonReflectiveSimilarityButton = uiradiobutton(app.TransformationTypeButtonGroup);
+            app.NonReflectiveSimilarityButton.Text = 'Non-Reflective Similarity';
+            app.NonReflectiveSimilarityButton.Position = [11 34 156 15];
+
+            % Create ReflectiveSimilarityButton
+            app.ReflectiveSimilarityButton = uiradiobutton(app.TransformationTypeButtonGroup);
+            app.ReflectiveSimilarityButton.Text = 'Reflective Similarity';
+            app.ReflectiveSimilarityButton.Position = [11 12 129 15];
+
+            % Create InterpolationTypeButtonGroup
+            app.InterpolationTypeButtonGroup = uibuttongroup(app.CriticalPointSelectTab);
+            app.InterpolationTypeButtonGroup.Title = 'Interpolation Type';
+            app.InterpolationTypeButtonGroup.Position = [20 96 182 106];
+
+            % Create LinearButton
+            app.LinearButton = uiradiobutton(app.InterpolationTypeButtonGroup);
+            app.LinearButton.Text = 'Linear';
+            app.LinearButton.Position = [11 60 57 15];
+            app.LinearButton.Value = true;
+
+            % Create CubicButton
+            app.CubicButton = uiradiobutton(app.InterpolationTypeButtonGroup);
+            app.CubicButton.Text = 'Cubic';
+            app.CubicButton.Position = [11 38 54 15];
+
+            % Create NearestNeighborButton
+            app.NearestNeighborButton = uiradiobutton(app.InterpolationTypeButtonGroup);
+            app.NearestNeighborButton.Text = 'Nearest-Neighbor';
+            app.NearestNeighborButton.Position = [11 16 120 15];
+
+            % Create UIAxes4_3
+            app.UIAxes4_3 = uiaxes(app.CriticalPointSelectTab);
+            app.UIAxes4_3.Position = [231 144 279 185];
+
+            % Create InitialOverlapLabel_2
+            app.InitialOverlapLabel_2 = uilabel(app.CriticalPointSelectTab);
+            app.InitialOverlapLabel_2.FontWeight = 'bold';
+            app.InitialOverlapLabel_2.Position = [231 342 83 15];
+            app.InitialOverlapLabel_2.Text = 'Initial Overlap';
+
+            % Create UIAxes4_4
+            app.UIAxes4_4 = uiaxes(app.CriticalPointSelectTab);
+            app.UIAxes4_4.Position = [538 141 279 185];
+
+            % Create RegistrationLabel
+            app.RegistrationLabel = uilabel(app.CriticalPointSelectTab);
+            app.RegistrationLabel.FontWeight = 'bold';
+            app.RegistrationLabel.Position = [538 342 75 15];
+            app.RegistrationLabel.Text = 'Registration';
+
+            % Create SaveRegisteredImageButton
+            app.SaveRegisteredImageButton = uibutton(app.CriticalPointSelectTab, 'push');
+            app.SaveRegisteredImageButton.ButtonPushedFcn = createCallbackFcn(app, @SaveRegisteredImageButtonPushed, true);
+            app.SaveRegisteredImageButton.Position = [654 54 143 22];
+            app.SaveRegisteredImageButton.Text = 'Save Registered Image';
+
+            % Create LoadFixedImageButton_2
+            app.LoadFixedImageButton_2 = uibutton(app.CriticalPointSelectTab, 'push');
+            app.LoadFixedImageButton_2.ButtonPushedFcn = createCallbackFcn(app, @LoadFixedImageButton_2Pushed, true);
+            app.LoadFixedImageButton_2.Position = [26 457 113 22];
+            app.LoadFixedImageButton_2.Text = 'Load Fixed Image';
+
+            % Create LoadMovingImageButton_2
+            app.LoadMovingImageButton_2 = uibutton(app.CriticalPointSelectTab, 'push');
+            app.LoadMovingImageButton_2.ButtonPushedFcn = createCallbackFcn(app, @LoadMovingImageButton_2Pushed, true);
+            app.LoadMovingImageButton_2.Position = [26 412 123 22];
+            app.LoadMovingImageButton_2.Text = 'Load Moving Image';
+
+            % Create FixedImageLoaded_2
+            app.FixedImageLoaded_2 = uilabel(app.CriticalPointSelectTab);
+            app.FixedImageLoaded_2.Position = [158 461 111 15];
+            app.FixedImageLoaded_2.Text = '(No Image Loaded)';
+
+            % Create MovingImageLoaded_2
+            app.MovingImageLoaded_2 = uilabel(app.CriticalPointSelectTab);
+            app.MovingImageLoaded_2.Position = [159 412 111 15];
+            app.MovingImageLoaded_2.Text = '(No Image Loaded)';
+
+            % Create RegisterButton_2
+            app.RegisterButton_2 = uibutton(app.CriticalPointSelectTab, 'push');
+            app.RegisterButton_2.ButtonPushedFcn = createCallbackFcn(app, @RegisterButton_2Pushed, true);
+            app.RegisterButton_2.Position = [697 440 100 22];
+            app.RegisterButton_2.Text = 'Register';
+
+            % Create MutualInformationComputedLabel
+            app.MutualInformationComputedLabel = uilabel(app.CriticalPointSelectTab);
+            app.MutualInformationComputedLabel.Position = [253 58 383 15];
+            app.MutualInformationComputedLabel.Text = 'Mutual Information Computed: ';
+
+            % Create DrawROITab
+            app.DrawROITab = uitab(app.TabGroup);
+            app.DrawROITab.Title = 'Draw ROI';
+
+            % Create CallRegisteredDataSet1Button
+            app.CallRegisteredDataSet1Button = uibutton(app.DrawROITab, 'push');
+            app.CallRegisteredDataSet1Button.ButtonPushedFcn = createCallbackFcn(app, @CallRegisteredDataSet1ButtonPushed, true);
+            app.CallRegisteredDataSet1Button.Position = [26 384 160 22];
+            app.CallRegisteredDataSet1Button.Text = 'Call Registered Data Set 1';
+
+            % Create NoDataSetCalledLabel
+            app.NoDataSetCalledLabel = uilabel(app.DrawROITab);
+            app.NoDataSetCalledLabel.Position = [194 388 118 15];
+            app.NoDataSetCalledLabel.Text = '(No Data Set Called)';
+
+            % Create DrawROIButton
+            app.DrawROIButton = uibutton(app.DrawROITab, 'push');
+            app.DrawROIButton.ButtonPushedFcn = createCallbackFcn(app, @DrawROIButtonPushed, true);
+            app.DrawROIButton.Position = [27 315 68 22];
+            app.DrawROIButton.Text = 'Draw ROI';
+
+            % Create TestMontageButton
+            app.TestMontageButton = uibutton(app.DrawROITab, 'push');
+            app.TestMontageButton.Position = [169 86 100 22];
+            app.TestMontageButton.Text = 'Test Montage';
+
+            % Create ROITypeDropDownLabel
+            app.ROITypeDropDownLabel = uilabel(app.DrawROITab);
+            app.ROITypeDropDownLabel.HorizontalAlignment = 'right';
+            app.ROITypeDropDownLabel.Position = [31 497 59 15];
+            app.ROITypeDropDownLabel.Text = 'ROI Type:';
+
+            % Create ROITypeDropDown
+            app.ROITypeDropDown = uidropdown(app.DrawROITab);
+            app.ROITypeDropDown.Items = {'Ellipse', 'Rectangle', 'Free Hand'};
+            app.ROITypeDropDown.Position = [105 493 100 22];
+            app.ROITypeDropDown.Value = 'Ellipse';
+
+            % Create CompareRegisteredDataSetsLabel
+            app.CompareRegisteredDataSetsLabel = uilabel(app.DrawROITab);
+            app.CompareRegisteredDataSetsLabel.FontWeight = 'bold';
+            app.CompareRegisteredDataSetsLabel.Position = [31 434 187 15];
+            app.CompareRegisteredDataSetsLabel.Text = 'Compare Registered Data Sets:';
+
+            % Create UIAxes6
+            app.UIAxes6 = uiaxes(app.DrawROITab);
+            app.UIAxes6.Position = [431 323 327 201];
+
+            % Create CompareLikeDatasetsLabel
+            app.CompareLikeDatasetsLabel = uilabel(app.DrawROITab);
+            app.CompareLikeDatasetsLabel.FontWeight = 'bold';
+            app.CompareLikeDatasetsLabel.Position = [31 184 140 15];
+            app.CompareLikeDatasetsLabel.Text = 'Compare Like Datasets';
+
+            % Create NumberofSamplesEditFieldLabel
+            app.NumberofSamplesEditFieldLabel = uilabel(app.DrawROITab);
+            app.NumberofSamplesEditFieldLabel.HorizontalAlignment = 'right';
+            app.NumberofSamplesEditFieldLabel.Position = [41 142 113 15];
+            app.NumberofSamplesEditFieldLabel.Text = 'Number of Samples';
+
+            % Create NumberofSamplesEditField
+            app.NumberofSamplesEditField = uieditfield(app.DrawROITab, 'numeric');
+            app.NumberofSamplesEditField.Position = [169 138 100 22];
+
+            % Create DrawROIButton_2
+            app.DrawROIButton_2 = uibutton(app.DrawROITab, 'push');
+            app.DrawROIButton_2.Position = [58 86 100 22];
+            app.DrawROIButton_2.Text = 'Draw ROI';
+
+            % Create CallRegisteredDataSet2Button
+            app.CallRegisteredDataSet2Button = uibutton(app.DrawROITab, 'push');
+            app.CallRegisteredDataSet2Button.ButtonPushedFcn = createCallbackFcn(app, @CallRegisteredDataSet2ButtonPushed, true);
+            app.CallRegisteredDataSet2Button.Position = [25 355 160 22];
+            app.CallRegisteredDataSet2Button.Text = 'Call Registered Data Set 2';
+
+            % Create NoDataSetCalledLabel_2
+            app.NoDataSetCalledLabel_2 = uilabel(app.DrawROITab);
+            app.NoDataSetCalledLabel_2.Position = [194 359 118 15];
+            app.NoDataSetCalledLabel_2.Text = '(No Data Set Called)';
+
+            % Create UIAxes7
+            app.UIAxes7 = uiaxes(app.DrawROITab);
+            app.UIAxes7.Position = [431 52 327 187];
+
+            % Create DataSet1Label
+            app.DataSet1Label = uilabel(app.DrawROITab);
+            app.DataSet1Label.FontWeight = 'bold';
+            app.DataSet1Label.Position = [368 528 64 15];
+            app.DataSet1Label.Text = 'Data Set 1';
+
+            % Create DataSet2Label
+            app.DataSet2Label = uilabel(app.DrawROITab);
+            app.DataSet2Label.FontWeight = 'bold';
+            app.DataSet2Label.Position = [368 243 64 15];
+            app.DataSet2Label.Text = 'Data Set 2';
+
+            % Create ROI1AverageLabel
+            app.ROI1AverageLabel = uilabel(app.DrawROITab);
+            app.ROI1AverageLabel.Position = [368 287 221 15];
+            app.ROI1AverageLabel.Text = 'ROI 1 Average: ';
+
+            % Create ROI2AverageLabel
+            app.ROI2AverageLabel = uilabel(app.DrawROITab);
+            app.ROI2AverageLabel.Position = [368 28 221 15];
+            app.ROI2AverageLabel.Text = 'ROI 2 Average: ';
+        end
+    end
+
+    methods (Access = public)
+
+        % Construct app
+        function app = TOPAT3
+
+            % Create and configure components
+            createComponents(app)
+
+            % Register the app with App Designer
+            registerApp(app, app.UIFigure)
+
+            % Execute the startup function
+            runStartupFcn(app, @startupFcn)
+
+            if nargout == 0
+                clear app
+            end
+        end
+
+        % Code that executes before app deletion
+        function delete(app)
+
+            % Delete UIFigure when app is deleted
+            delete(app.UIFigure)
+        end
+    end
+end

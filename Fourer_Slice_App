@@ -1,0 +1,172 @@
+classdef Final_Fourier_Slice < matlab.apps.AppBase
+
+    % Properties that correspond to app components
+    properties (Access = public)
+        UIFigure    matlab.ui.Figure
+        UIAxes      matlab.ui.control.UIAxes
+        UIAxes_2    matlab.ui.control.UIAxes
+        UIAxes_3    matlab.ui.control.UIAxes
+        UIAxes_4    matlab.ui.control.UIAxes
+        UIAxes_5    matlab.ui.control.UIAxes
+        NextButton  matlab.ui.control.Button
+    end
+
+
+    properties (Access = public)
+        angle % Description
+    end
+
+
+    methods (Access = private)
+
+        % Code that executes after component creation
+        function startupFcn(app, angle)
+            app.angle = 0;
+            
+        end
+
+        % Button pushed function: NextButton
+        function NextButtonPushed(app, event)
+            % Panel 1:
+            % first display the original CT slice.
+            %angle = 170;
+            ax = app.UIAxes;
+            ctstack = load('stack2.mat');
+            slice = 50;
+            %subplot(3,2,1)
+            ctstack = ctstack.stack2;
+            im = ctstack(:,:,slice);
+            im_rot = imrotate(im, app.angle);
+            imshow(im_rot./max(im_rot(:)), 'Parent', app.UIAxes)
+            title(ax,['Original Slice, \theta = ' num2str(app.angle)])
+            
+            % Panel 2:
+            % next take the 2D fourier transform. shift.
+            ax2 = app.UIAxes_2;
+            ft_im = fft2(im);
+            ft_imrot = imrotate(fftshift(ft_im), app.angle);
+            %subplot(3,2,2)
+            m = abs(ft_imrot);
+            imshow(m./max(m(:)), 'Parent', app.UIAxes_2)
+            title(ax2, 'Shifted 2D Fourier Transform')
+            
+            
+            % Panel 3: Map the projection
+            %take a summation of each column, post-rotation.
+            im_proj = sum(im_rot,2); %sum the original image
+            pixel = 1:1:length(im_proj);
+            %subplot(3,2,3)
+            ax3 = app.UIAxes_3;
+            plot(pixel,im_proj, 'Parent', app.UIAxes_3)
+            title(ax3, ['Projection of the Slice at \theta = ' num2str(app.angle)])
+            xlabel(ax3, 'Pixel')
+            ylabel(ax3, 'Relative Pixel Intensity')
+            xlim(ax3, [1 length(pixel)])
+            ylim(ax3, [1 3e4])
+            
+            %Panel 5: Take the 1D Fourier Transfor of the Projection
+            ax4 = app.UIAxes_4;
+            ft_proj =fft(im_proj);
+            %subplot(3,2,5)
+            ft_projshift = fftshift(ft_proj);
+            plot(pixel, abs(ft_projshift), 'Parent', app.UIAxes_4)
+            xlim(ax4, [0 size(im,1)])
+            ylim(ax4, [-5e5 3e6])
+            title(ax4, '1D Fourier Transform of the Projection Profile')
+            
+            %Panel 6: Cross section of the 2D Fourier Transform
+            ax5 = app.UIAxes_5;
+            maximum = max(ft_imrot(:));
+            [x,y]=find(ft_imrot==maximum);
+            %xsect_origin =  148; round(median(1:1:length(pixel))); %129;
+            xsect = ft_imrot;
+            %subplot(3,2,6)
+            xsect = xsect(x, :);
+            %imshow(abs(ft_im), [])
+            %n = size(xsect,1);
+            plot(ax5, pixel, abs(xsect), 'Parent', app.UIAxes_5)
+            xlim(ax5, [0 size(im,1)])
+            ylim(ax5, [-5e5 3e6])
+            title(ax5, 'Cross Section of 2D Fourier Transform')
+            drawnow;
+            
+            app.angle = app.angle + 10;
+            if app.angle == 360
+                app.angle = 0; %reset counter;
+            end
+            
+            %ButtonPushedFcn
+            %check the cross section being sampled
+            %subplot(3,2,2)
+             %hold on
+             %line([x x], [1 size(ft_imrot,1)]);
+            
+        end
+    end
+
+    % App initialization and construction
+    methods (Access = private)
+
+        % Create UIFigure and components
+        function createComponents(app)
+
+            % Create UIFigure
+            app.UIFigure = uifigure;
+            app.UIFigure.Position = [100 100 669 709];
+            app.UIFigure.Name = 'UI Figure';
+
+            % Create UIAxes
+            app.UIAxes = uiaxes(app.UIFigure);
+            app.UIAxes.Position = [1 495 322 215];
+
+            % Create UIAxes_2
+            app.UIAxes_2 = uiaxes(app.UIFigure);
+            app.UIAxes_2.Position = [344 503 326 207];
+
+            % Create UIAxes_3
+            app.UIAxes_3 = uiaxes(app.UIFigure);
+            app.UIAxes_3.Position = [1 248 322 215];
+
+            % Create UIAxes_4
+            app.UIAxes_4 = uiaxes(app.UIFigure);
+            app.UIAxes_4.Position = [344 2 326 215];
+
+            % Create UIAxes_5
+            app.UIAxes_5 = uiaxes(app.UIFigure);
+            app.UIAxes_5.Position = [1 2 322 215];
+
+            % Create NextButton
+            app.NextButton = uibutton(app.UIFigure, 'push');
+            app.NextButton.ButtonPushedFcn = createCallbackFcn(app, @NextButtonPushed, true);
+            app.NextButton.Position = [457 344 100 22];
+            app.NextButton.Text = 'Next';
+        end
+    end
+
+    methods (Access = public)
+
+        % Construct app
+        function app = Final_Fourier_Slice(varargin)
+
+            % Create and configure components
+            createComponents(app)
+
+            % Register the app with App Designer
+            registerApp(app, app.UIFigure)
+
+            % Execute the startup function
+            runStartupFcn(app, @(app)startupFcn(app, varargin{:}))
+
+            if nargout == 0
+                clear app
+            end
+        end
+
+        % Code that executes before app deletion
+        function delete(app)
+
+            % Delete UIFigure when app is deleted
+            delete(app.UIFigure)
+        end
+    end
+end
